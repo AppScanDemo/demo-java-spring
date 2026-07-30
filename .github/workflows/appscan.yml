@@ -17,8 +17,8 @@ jobs:
 
       - name: 2. Authenticate & Download SAClientUtil
         env:
-          ASOC_ID: ${{ secrets.ASOC2_ID }}
-          ASOC_SECRET: ${{ secrets.ASOC2_SECRET }}
+          ASOC2_ID: ${{ secrets.ASOC2_ID }}
+          ASOC2_SECRET: ${{ secrets.ASOC2_SECRET }}
         run: |
           if [ -z "$ASOC2_ID" ] || [ -z "$ASOC2_SECRET" ]; then
             echo "ERROR: ASOC2_ID atau ASOC2_SECRET tidak ditemukan di Secrets!"
@@ -34,7 +34,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD")
           
-          TOKEN=$(echo $AUTH_RESPONSE | jq -r '.Token // empty')
+          TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.Token // empty')
 
           if [ -z "$TOKEN" ]; then
             echo "ERROR: Gagal Otentikasi API Key!"
@@ -63,4 +63,4 @@ jobs:
           appscan.sh prepare -n Java_WebGoat_Scan -d .
 
           # 2. Upload & Jalankan Analisis di Portal ASoC
-          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx
+          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx -nosca
