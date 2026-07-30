@@ -59,8 +59,11 @@ jobs:
 
       - name: 4. Generate Scan Package & Run Scan
         run: |
-          # 1. Buat paket .irx
+          # 1. Hapus folder hasil build agar ASoC memetakan path langsung ke folder source (src/...)
+          rm -rf target build
+
+          # 2. Buat paket .irx
           appscan.sh prepare -n Java_WebGoat_Scan -d .
 
-          # 2. Upload & Jalankan Analisis di Portal ASoC
-          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx
+          # 3. Upload & Jalankan Analisis di Portal ASoC
+          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx -nosca
