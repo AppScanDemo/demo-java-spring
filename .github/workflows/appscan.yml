@@ -63,4 +63,4 @@ jobs:
           appscan.sh prepare -n Java_WebGoat_Scan -d .
 
           # 2. Upload & Jalankan Analisis di Portal ASoC
-          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx -nosca
+          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx
