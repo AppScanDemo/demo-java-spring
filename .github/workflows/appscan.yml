@@ -16,10 +16,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 2. Run AppScan SAST Scan
-        uses: HCL-TECH-SOFTWARE/appscan-sast-action@v1.0.0  # <--- Turunkan ke v1.0.0
+        uses: HCL-TECH-SOFTWARE/appscan-sast-action@v1.1.0
+        continue-on-error: true  # <--- Abaikan bug internal JS HCL di akhir proses
         with:
           asoc_key: ${{ secrets.ASOC2_ID }}
           asoc_secret: ${{ secrets.ASOC2_SECRET }}
           application_id: "93451ffb-ffa0-444d-a8ee-4853c0bac987"
-          scan_name: "SAST_WebGoat_GitHub"
+          scan_name: "SAST_WebGoat_GitHub_Plugin"
           static_analysis_only: true
