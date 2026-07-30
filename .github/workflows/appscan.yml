@@ -17,11 +17,15 @@ jobs:
 
       - name: 2. Download & Install HCL AppScan CLI (SAClientUtil)
         run: |
-          wget https://cloud.appscan.com/api/SCX/StaticAnalyzer/SAClientUtil?os=linux -O SAClientUtil.zip
+          # Menggunakan curl dengan flag -L untuk follow redirect URL
+          curl -sS -L "https://cloud.appscan.com/api/SCX/StaticAnalyzer/SAClientUtil?os=linux" -o SAClientUtil.zip
+          
+          # Ekstrak file zip
           unzip -q SAClientUtil.zip
           
-          # Temukan folder hasil unzip SAClientUtil dan tambahkan ke PATH
+          # Set permission & tambahkan ke PATH
           SAC_DIR=$(find . -maxdepth 1 -type d -name "SAClientUtil*" | head -n 1)
+          chmod +x $SAC_DIR/bin/appscan.sh
           echo "$PWD/$SAC_DIR/bin" >> $GITHUB_PATH
 
       - name: 3. Verify Secrets & Login to ASoC
