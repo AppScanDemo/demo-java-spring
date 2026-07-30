@@ -15,31 +15,38 @@ jobs:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
-      - name: 2. Download & Install HCL AppScan CLI (SAClientUtil)
+      - name: 2. Authenticate & Download SAClientUtil
         run: |
-          # Menggunakan curl dengan flag -L untuk follow redirect URL
-          curl -sS -L "https://cloud.appscan.com/api/SCX/StaticAnalyzer/SAClientUtil?os=linux" -o SAClientUtil.zip
+          # 1. Login ke API v4 ASoC untuk mendapatkan Bearer Token
+          AUTH_RESPONSE=$(curl -s -X POST "https://cloud.appscan.com/api/v4/Account/ApiKeyLogin" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d "{\"KeyId\": \"${{ secrets.ASOC_KEY_ID }}\", \"KeySecret\": \"${{ secrets.ASOC_KEY_SECRET }}\"}")
           
-          # Ekstrak file zip
+          TOKEN=$(echo $AUTH_RESPONSE | jq -r '.Token')
+
+          # Cek apakah token berhasil didapat
+          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+            echo "ERROR: Gagal otentikasi API Key! Periksa ASOC_KEY_ID dan ASOC_KEY_SECRET di Secrets."
+            echo "Response: $AUTH_RESPONSE"
+            exit 1
+          fi
+
+          # 2. Download SAClientUtil asli menggunakan Bearer Token
+          echo "Token didapatkan, mengunduh SAClientUtil..."
+          curl -sS -L -H "Authorization: Bearer $TOKEN" "https://cloud.appscan.com/api/v4/Tools/SAClientUtil?os=linux" -o SAClientUtil.zip
+
+          # 3. Ekstrak dan atur PATH
           unzip -q SAClientUtil.zip
-          
-          # Set permission & tambahkan ke PATH
           SAC_DIR=$(find . -maxdepth 1 -type d -name "SAClientUtil*" | head -n 1)
           chmod +x $SAC_DIR/bin/appscan.sh
           echo "$PWD/$SAC_DIR/bin" >> $GITHUB_PATH
 
-      - name: 3. Verify Secrets & Login to ASoC
+      - name: 3. Login to AppScan CLI
         run: |
-          if [ -z "${{ secrets.ASOC_KEY_ID }}" ] || [ -z "${{ secrets.ASOC_KEY_SECRET }}" ]; then
-            echo "ERROR: ASOC_KEY_ID atau ASOC_KEY_SECRET belum terpasang di GitHub Secrets!"
-            exit 1
-          fi
           appscan.sh api_login -u ${{ secrets.ASOC_KEY_ID }} -P ${{ secrets.ASOC_KEY_SECRET }} -persist
 
       - name: 4. Generate Scan Package & Run Scan
         run: |
-          # Prepare paket analisis
           appscan.sh prepare -n Java_WebGoat_Scan -d .
-
-          # Invoke scan menggunakan Nama Aplikasi atau Application ID dari ASoC
           appscan.sh invoke -n Java_WebGoat_Scan -a "Demo-Java-SpringSecurity" --fail-build
