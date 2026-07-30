@@ -17,11 +17,11 @@ jobs:
 
       - name: 2. Authenticate & Download SAClientUtil
         env:
-          ASOC_ID: ${{ secrets.ASOC_ID }}
-          ASOC_SECRET: ${{ secrets.ASOC_SECRET }}
+          ASOC_ID: ${{ secrets.ASOC2_ID }}
+          ASOC_SECRET: ${{ secrets.ASOC2_SECRET }}
         run: |
-          if [ -z "$ASOC_ID" ] || [ -z "$ASOC_SECRET" ]; then
-            echo "ERROR: ASOC_ID atau ASOC_SECRET tidak ditemukan di Secrets!"
+          if [ -z "$ASOC2_ID" ] || [ -z "$ASOC2_SECRET" ]; then
+            echo "ERROR: ASOC2_ID atau ASOC2_SECRET tidak ditemukan di Secrets!"
             exit 1
           fi
 
@@ -55,7 +55,7 @@ jobs:
 
       - name: 3. Login to AppScan CLI
         run: |
-          appscan.sh api_login -u ${{ secrets.ASOC_ID }} -P ${{ secrets.ASOC_SECRET }} -persist
+          appscan.sh api_login -u ${{ secrets.ASOC2_ID }} -P ${{ secrets.ASOC2_SECRET }} -persist
 
       - name: 4. Generate Scan Package & Run Scan
         run: |
