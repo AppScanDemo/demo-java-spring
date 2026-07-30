@@ -15,55 +15,11 @@ jobs:
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
-      - name: 2. Authenticate & Download SAClientUtil
-        env:
-          ASOC2_ID: ${{ secrets.ASOC2_ID }}
-          ASOC2_SECRET: ${{ secrets.ASOC2_SECRET }}
-        run: |
-          if [ -z "$ASOC2_ID" ] || [ -z "$ASOC2_SECRET" ]; then
-            echo "ERROR: ASOC2_ID atau ASOC2_SECRET tidak ditemukan di Secrets!"
-            exit 1
-          fi
-
-          # Buat payload JSON secara aman menggunakan jq
-          JSON_PAYLOAD=$(jq -n --arg id "$ASOC2_ID" --arg sec "$ASOC2_SECRET" '{KeyId: $id, KeySecret: $sec}')
-
-          # 1. Login ke API v4 ASoC untuk mendapatkan Bearer Token
-          AUTH_RESPONSE=$(curl -s -X POST "https://cloud.appscan.com/api/v4/Account/ApiKeyLogin" \
-            -H "accept: application/json" \
-            -H "Content-Type: application/json" \
-            -d "$JSON_PAYLOAD")
-          
-          TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.Token // empty')
-
-          if [ -z "$TOKEN" ]; then
-            echo "ERROR: Gagal Otentikasi API Key!"
-            echo "Response: $AUTH_RESPONSE"
-            exit 1
-          fi
-
-          echo "Berhasil otentikasi! Mengunduh SAClientUtil..."
-
-          # 2. Download SAClientUtil menggunakan Bearer Token
-          curl -sS -L -H "Authorization: Bearer $TOKEN" "https://cloud.appscan.com/api/v4/Tools/SAClientUtil?os=linux" -o SAClientUtil.zip
-
-          # 3. Ekstrak dan atur PATH
-          unzip -q SAClientUtil.zip
-          SAC_DIR=$(find . -maxdepth 1 -type d -name "SAClientUtil*" | head -n 1)
-          chmod +x $SAC_DIR/bin/appscan.sh
-          echo "$PWD/$SAC_DIR/bin" >> $GITHUB_PATH
-
-      - name: 3. Login to AppScan CLI
-        run: |
-          appscan.sh api_login -u ${{ secrets.ASOC2_ID }} -P ${{ secrets.ASOC2_SECRET }} -persist
-
-      - name: 4. Generate Scan Package & Run Scan
-        run: |
-          # 1. Hapus folder hasil build agar ASoC memetakan path langsung ke folder source (src/...)
-          rm -rf target build
-
-          # 2. Buat paket .irx
-          appscan.sh prepare -n Java_WebGoat_Scan -d .
-
-          # 3. Upload & Jalankan Analisis di Portal ASoC
-          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx 
+      - name: 2. Run AppScan SAST Scan
+        uses: HCL-TECH-SOFTWARE/appscan-sast-action@v1.1.0
+        with:
+          asoc_key: ${{ secrets.ASOC2_ID }}
+          asoc_secret: ${{ secrets.ASOC2_SECRET }}
+          application_id: "93451ffb-ffa0-444d-a8ee-4853c0bac987"
+          scan_name: "SAST_WebGoat_GitHub"
+          static_analysis_only: true
