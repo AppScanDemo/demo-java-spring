@@ -31,4 +31,4 @@ jobs:
           appscan.sh prepare -n Java_WebGoat_Scan -d .
           
           # Kirim ke portal ASoC dan paksa CI/CD FAIL jika ada temuan High/Critical (--fail-build)
-          appscan.sh invoke -n Java_WebGoat_Scan -a "Client-Demo-AppSec" --fail-build
+          appscan.sh invoke -n Java_WebGoat_Scan -a "Demo-Java-SpringSecurity" --fail-build
