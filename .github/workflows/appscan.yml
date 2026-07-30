@@ -1,0 +1,34 @@
+name: HCL AppScan on Cloud (ASoC) SAST Scan
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  AppScan-SAST:
+    name: Run AppScan SAST Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 2. Download & Install HCL AppScan CLI (SAClientUtil)
+        run: |
+          wget https://cloud.appscan.com/api/SCX/StaticAnalyzer/SAClientUtil?os=linux -O SAClientUtil.zip
+          unzip -q SAClientUtil.zip
+          echo "${{ github.workspace }}/SAClientUtil/bin" >> $GITHUB_PATH
+
+      - name: 3. Login to AppScan on Cloud
+        run: |
+          appscan.sh api_login -u ${{ secrets.ASOC_KEY_ID }} -P ${{ secrets.ASOC_KEY_SECRET }} -persist
+
+      - name: 4. Generate Scan Package & Run Scan
+        run: |
+          # Membuat paket analisis static (.irx)
+          appscan.sh prepare -n Java_WebGoat_Scan -d .
+          
+          # Kirim ke portal ASoC dan paksa CI/CD FAIL jika ada temuan High/Critical (--fail-build)
+          appscan.sh invoke -n Java_WebGoat_Scan -a "Client-Demo-AppSec" --fail-build
