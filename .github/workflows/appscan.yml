@@ -16,24 +16,35 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 2. Authenticate & Download SAClientUtil
+        env:
+          ASOC_ID: ${{ secrets.ASOC_ID }}
+          ASOC_SECRET: ${{ secrets.ASOC_SECRET }}
         run: |
+          if [ -z "$ASOC_ID" ] || [ -z "$ASOC_SECRET" ]; then
+            echo "ERROR: ASOC_ID atau ASOC_SECRET tidak ditemukan di Secrets!"
+            exit 1
+          fi
+
+          # Buat payload JSON secara aman menggunakan jq
+          JSON_PAYLOAD=$(jq -n --arg id "$ASOC_ID" --arg sec "$ASOC_SECRET" '{KeyId: $id, KeySecret: $sec}')
+
           # 1. Login ke API v4 ASoC untuk mendapatkan Bearer Token
           AUTH_RESPONSE=$(curl -s -X POST "https://cloud.appscan.com/api/v4/Account/ApiKeyLogin" \
             -H "accept: application/json" \
             -H "Content-Type: application/json" \
-            -d "{\"KeyId\": \"${{ secrets.ASOC_KEY_ID }}\", \"KeySecret\": \"${{ secrets.ASOC_KEY_SECRET }}\"}")
+            -d "$JSON_PAYLOAD")
           
-          TOKEN=$(echo $AUTH_RESPONSE | jq -r '.Token')
+          TOKEN=$(echo $AUTH_RESPONSE | jq -r '.Token // empty')
 
-          # Cek apakah token berhasil didapat
-          if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
-            echo "ERROR: Gagal otentikasi API Key! Periksa ASOC_KEY_ID dan ASOC_KEY_SECRET di Secrets."
+          if [ -z "$TOKEN" ]; then
+            echo "ERROR: Gagal Otentikasi API Key!"
             echo "Response: $AUTH_RESPONSE"
             exit 1
           fi
 
-          # 2. Download SAClientUtil asli menggunakan Bearer Token
-          echo "Token didapatkan, mengunduh SAClientUtil..."
+          echo "Berhasil otentikasi! Mengunduh SAClientUtil..."
+
+          # 2. Download SAClientUtil menggunakan Bearer Token
           curl -sS -L -H "Authorization: Bearer $TOKEN" "https://cloud.appscan.com/api/v4/Tools/SAClientUtil?os=linux" -o SAClientUtil.zip
 
           # 3. Ekstrak dan atur PATH
@@ -44,7 +55,7 @@ jobs:
 
       - name: 3. Login to AppScan CLI
         run: |
-          appscan.sh api_login -u ${{ secrets.ASOC_KEY_ID }} -P ${{ secrets.ASOC_KEY_SECRET }} -persist
+          appscan.sh api_login -u ${{ secrets.ASOC_ID }} -P ${{ secrets.ASOC_SECRET }} -persist
 
       - name: 4. Generate Scan Package & Run Scan
         run: |
