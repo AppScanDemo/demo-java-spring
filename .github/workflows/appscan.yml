@@ -59,5 +59,8 @@ jobs:
 
       - name: 4. Generate Scan Package & Run Scan
         run: |
+          # 1. Buat paket .irx
           appscan.sh prepare -n Java_WebGoat_Scan -d .
-          appscan.sh invoke -n Java_WebGoat_Scan -a "Demo-Java-SpringSecurity" --fail-build
+
+          # 2. Upload & Jalankan Analisis di Portal ASoC
+          appscan.sh queue_analysis -a "4182e0c6-204f-4128-93a6-a31d402c41ec" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx
