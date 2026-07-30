@@ -26,7 +26,7 @@ jobs:
           fi
 
           # Buat payload JSON secara aman menggunakan jq
-          JSON_PAYLOAD=$(jq -n --arg id "$ASOC_ID" --arg sec "$ASOC_SECRET" '{KeyId: $id, KeySecret: $sec}')
+          JSON_PAYLOAD=$(jq -n --arg id "$ASOC2_ID" --arg sec "$ASOC2_SECRET" '{KeyId: $id, KeySecret: $sec}')
 
           # 1. Login ke API v4 ASoC untuk mendapatkan Bearer Token
           AUTH_RESPONSE=$(curl -s -X POST "https://cloud.appscan.com/api/v4/Account/ApiKeyLogin" \
@@ -63,4 +63,4 @@ jobs:
           appscan.sh prepare -n Java_WebGoat_Scan -d .
 
           # 2. Upload & Jalankan Analisis di Portal ASoC
-          appscan.sh queue_analysis -a "4182e0c6-204f-4128-93a6-a31d402c41ec" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx
+          appscan.sh queue_analysis -a "93451ffb-ffa0-444d-a8ee-4853c0bac987" -n "SAST_WebGoat_GitHub" -f Java_WebGoat_Scan.irx
